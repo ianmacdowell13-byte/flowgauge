@@ -10,6 +10,42 @@ FlowGauge is an MCP server + companion skill that turns GA4 into answers to thre
 
 > **v0.1.** The GA4 Data API tools are implemented and working end-to-end. The optional BigQuery backend (`flow_paths` / `funnel`) is still on the roadmap. See [`docs/SPEC.md`](docs/SPEC.md) for the full design.
 
+## Who it's for
+
+**FlowGauge is for you if** you own a website's analytics but you're not an
+analyst — a solo founder, creator, indie hacker, or small-team marketer who has
+GA4 set up, uses Claude (Code or Desktop) or another MCP client, and wants
+*"what should I do about my traffic?"* without learning GA4's dimension/metric
+schema.
+
+**It's probably not for you if** you're a data analyst who wants raw,
+arbitrary GA4 queries (use [Google's official MCP server](https://github.com/googleanalytics/google-analytics-mcp)
+for that), or you don't have a GA4 property yet.
+
+## What you get
+
+Ask Claude *"run a traffic health check"* and FlowGauge returns a prioritized
+memo, not a spreadsheet:
+
+```text
+Traffic Health — last 28 days (vs. previous 28)
+
+What's working
+• Sessions up 18% (12.4k → 14.6k); Organic Search drove the gain (+31%).
+• /guides/getting-started converts to a store click-out at 6.1% vs. 2.3% site-wide.
+
+What's leaking
+• Paid Social: 2.1k sessions but 0.4% conversion — engagement 22% vs. 41% site-wide.
+• /pricing: 3.0k sessions, 68% bounce — high intent, weak page.
+
+Fix next
+1. Fix /pricing — a 68% bounce on a high-intent page is your biggest single loss.
+2. Cut or retarget Paid Social; it underperforms organic ~5×.
+3. Copy /guides/getting-started's structure onto your other guide pages.
+```
+
+*(Illustrative output. Your numbers, your config-defined conversions.)*
+
 ## Why another GA4 integration?
 
 There are already many GA4 MCP servers — including [Google's official one](https://github.com/googleanalytics/google-analytics-mcp). **FlowGauge is deliberately not another raw query wrapper.** Those expose "pick dimensions + metrics, get a table," which assumes you know GA4's schema. FlowGauge adds the layer on top that they don't:
@@ -57,21 +93,6 @@ git clone https://github.com/ianmacdowell13-byte/flowgauge && cd flowgauge
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 ```
 
-## Billing & data access
-
-FlowGauge is **just code** — there is no hosted FlowGauge service, and nothing
-routes through the author's accounts:
-
-- **You bring your own GA4 property and Google credentials.** Every API call runs
-  under *your* auth against *your* property (see [Authentication](#authentication)).
-- **The GA4 Data API is free.** Google rate-limits it with per-property quotas but
-  does not bill per request. Installing FlowGauge costs you nothing in API fees.
-- **No keys are embedded.** The package ships only placeholder config; your real
-  config and credentials stay on your machine and are git-ignored.
-- **The only thing that can cost money** is the optional BigQuery backend
-  (`flow_paths` / `funnel`), which runs on *your* GCP billing, is opt-in, and ships
-  **disabled by default**.
-
 ## Quickstart
 
 1. **Authenticate** as yourself (works today — see [Authentication](#authentication) for why, and the service-account option for CI):
@@ -111,20 +132,16 @@ routes through the author's accounts:
    ```
    (Using a pre-cutoff service account instead? Add `"GOOGLE_APPLICATION_CREDENTIALS": "/path/to/key.json"` to that `env` block.)
 
+6. **Ask for a read.** In your client: *"run a traffic health check"* — the
+   `traffic-health` skill chains the tools and writes the memo shown in
+   [What you get](#what-you-get). (Plugin users get the skill automatically;
+   otherwise, point the client at [`skills/traffic-health/SKILL.md`](skills/traffic-health/SKILL.md).)
+
 ## Authentication
 
-> **Heads-up (June 2026):** Google stopped registering service accounts created
-> after ~April 20, 2026 as Google Accounts, so GA4 (and Search Console) reject
-> them with *"this email doesn't match a Google Account."* Until Google restores
-> that, authenticate to GA4 as **yourself** (a user login). A service-account key
-> still works for the optional BigQuery backend, and for GA4 if you have a
-> service account created *before* the cutoff.
-> Ref: [Google Developer forums](https://discuss.google.dev/t/problem-with-new-service-accounts/362176).
-
-### Authenticate as yourself (recommended)
-
-If your Google account already has access to the GA4 property (Viewer or above),
-this needs **no "add user" step**:
+**Authenticate as yourself** — the recommended path. If your Google account
+already has access to the GA4 property (Viewer or above), this needs **no "add
+user" step**:
 
 ```bash
 gcloud auth application-default login \
@@ -139,10 +156,17 @@ automatically (`google.auth.default()`). Verify the whole chain:
 .venv/bin/python scripts/smoke-test.py
 ```
 
+> **Why not a service account?** (June 2026) Google stopped registering service
+> accounts created after ~April 20, 2026 as Google Accounts, so GA4 rejects them
+> with *"this email doesn't match a Google Account."* Authenticate as yourself
+> until that's restored. A service-account key still works for the optional
+> BigQuery backend, and for GA4 if your service account predates the cutoff.
+> Ref: [Google Developer forums](https://discuss.google.dev/t/problem-with-new-service-accounts/362176).
+
 ## Service account setup
 
 > Use this path only for the **BigQuery backend**, or if you have a service
-> account created **before ~April 20, 2026** (see the heads-up above — newer ones
+> account created **before ~April 20, 2026** (see the note above — newer ones
 > can't be added to GA4).
 
 FlowGauge can also authenticate to GA4 with a **service-account key** (not a
@@ -183,6 +207,21 @@ Then `export GOOGLE_APPLICATION_CREDENTIALS=~/.config/flowgauge/sa-key.json` and
 
 > The service account needs **no GCP IAM roles** — its only permission is the GA4 Viewer grant you add in the GA4 admin UI. Least privilege by default.
 
+## Billing & data access
+
+FlowGauge is **just code** — there is no hosted FlowGauge service, and nothing
+routes through the author's accounts:
+
+- **You bring your own GA4 property and Google credentials.** Every API call runs
+  under *your* auth against *your* property.
+- **The GA4 Data API is free.** Google rate-limits it with per-property quotas but
+  does not bill per request. Installing FlowGauge costs you nothing in API fees.
+- **No keys are embedded.** The package ships only placeholder config; your real
+  config and credentials stay on your machine and are git-ignored.
+- **The only thing that can cost money** is the optional BigQuery backend
+  (`flow_paths` / `funnel`), which runs on *your* GCP billing, is opt-in, and ships
+  **disabled by default**.
+
 ## Tools
 
 **Available now** (GA4 Data API — implemented and tested):
@@ -211,8 +250,8 @@ The **`traffic-health`** skill (in [`skills/`](skills/traffic-health/SKILL.md)) 
 
 ## Status & roadmap
 
-- **v0.1** — scaffold + Data API tools (this release)
-- **v0.2** — `traffic-health` skill + HTTP transport + Cowork plugin packaging
+- **v0.1** — scaffold + Data API tools ✓
+- **v0.2** — `traffic-health` skill + Claude Code plugin packaging ✓ *(current)*
 - **v0.3** — BigQuery backend (`flow_paths`, `funnel`)
 - **v0.4** — optional Google Search Console join on `landingPage`
 
