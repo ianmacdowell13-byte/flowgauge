@@ -30,13 +30,21 @@ class GA4Client:
         end_date: str,
         order_by_metric: str | None = None,
         limit: int = 50,
+        dim_filters: dict[str, str] | None = None,
+        dim_contains: dict[str, str] | None = None,
     ) -> tuple[list[Row], bool]:
-        """Run a GA4 report. Returns (rows, sampled)."""
+        """Run a GA4 report. Returns (rows, sampled).
+
+        ``dim_filters`` are exact dimension equalities; ``dim_contains`` are
+        substring matches. Both map field name -> value and are AND-ed together
+        (e.g. exact ``{"eventName": "click"}`` + contains
+        ``{"customEvent:link_domain": "patreon.com"}``). Building the
+        FilterExpression here keeps callers free of the GA4 SDK types.
+        """
         from google.analytics.data_v1beta.types import (
             DateRange,
             Dimension,
             Metric,
-            MetricType,
             OrderBy,
             RunReportRequest,
         )
@@ -48,6 +56,9 @@ class GA4Client:
             date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
             limit=limit,
         )
+        dimension_filter = _build_dimension_filter(dim_filters or {}, dim_contains or {})
+        if dimension_filter is not None:
+            req.dimension_filter = dimension_filter
         if order_by_metric:
             req.order_bys = [
                 OrderBy(metric=OrderBy.MetricOrderBy(metric_name=order_by_metric), desc=True)
@@ -63,9 +74,34 @@ class GA4Client:
             mets = {met_headers[i]: _to_float(v.value) for i, v in enumerate(r.metric_values)}
             rows.append(Row(dimensions=dims, metrics=mets))
 
-        sampled = any(getattr(md, "samplingMetadatas", None) for md in resp.metadata.__dict__.values()) \
-            if resp.metadata else False
-        return rows, bool(sampled)
+        meta = resp.metadata
+        sampled = bool(meta and getattr(meta, "sampling_metadatas", None))
+        return rows, sampled
+
+
+def _build_dimension_filter(exact: dict[str, str], contains: dict[str, str]):
+    """Build an AND-grouped dimension FilterExpression from exact + substring
+    matches. Returns None if both are empty; a bare Filter for a single clause.
+    """
+    from google.analytics.data_v1beta.types import Filter, FilterExpression, FilterExpressionList
+
+    StringFilter = Filter.StringFilter
+    exprs: list = []
+    for field, value in exact.items():
+        exprs.append(FilterExpression(
+            filter=Filter(field_name=field, string_filter=StringFilter(value=value))
+        ))
+    for field, value in contains.items():
+        exprs.append(FilterExpression(
+            filter=Filter(field_name=field, string_filter=StringFilter(
+                value=value, match_type=StringFilter.MatchType.CONTAINS))
+        ))
+
+    if not exprs:
+        return None
+    if len(exprs) == 1:
+        return exprs[0]
+    return FilterExpression(and_group=FilterExpressionList(expressions=exprs))
 
 
 def _to_float(value: str) -> float:

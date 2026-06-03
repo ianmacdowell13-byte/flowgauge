@@ -4,7 +4,8 @@ service-account*.json
 *.pem
 .env
 .env.*
-flowgauge.config.yaml          # local config may contain property IDs / paths; commit only the .example
+# local config may contain property IDs / paths; commit only the .example
+flowgauge.config.yaml
 
 # Python
 __pycache__/
@@ -20,6 +21,10 @@ venv/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Generated analytics output — may contain private property data, don't publish
+traffic-health-data.json
+traffic-health-*.md
 
 # Editors / OS
 .idea/

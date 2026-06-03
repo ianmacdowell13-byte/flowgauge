@@ -34,6 +34,13 @@ Produce a short, prioritized read on a site's traffic and UX flow using the
 - Lead with the answer; keep tables minimal and only when they earn their place.
 - Always quantify ("engagement rate 38% vs. 52% site-wide"), never vibes.
 - Flag sampling/threshold warnings surfaced in tool `notes`.
+- `conversions` counts each config-defined event separately. Event-param matches
+  (e.g. `link_domain`) require that param to be registered as an event-scoped
+  custom dimension in GA4; if it isn't, the failure surfaces in the report
+  `notes` — relay that instead of reporting a silent zero.
 - Never expose user-level data; operate on aggregates only.
-- If a tool errors on auth, tell the user to check the service-account Viewer
-  grant and `GOOGLE_APPLICATION_CREDENTIALS`.
+- If a tool errors on auth, the GA4 credentials aren't reaching the API: confirm
+  the user ran `gcloud auth application-default login` (with the
+  `analytics.readonly` scope) and that their Google account or service account
+  has access to the property. `GOOGLE_APPLICATION_CREDENTIALS` should be set only
+  when using a (pre-2026) service-account key, not for user ADC.

@@ -8,11 +8,16 @@ brand_domains: [example.com]        # used to classify internal vs. outbound
 
 # What counts as "success" for THIS site. Reports speak in these terms.
 # Generic creator profile: traffic -> outbound click to a store and/or Patreon.
+# NOTE: event-param matches (e.g. link_domain) are queried as event-scoped custom
+# dimensions, so each param must be registered in GA4 → Admin → Custom definitions
+# (customEvent:<param>). A `key_event: true` match needs no custom dimension.
 conversions:
+  # params_contains = substring match (robust to subdomains / www.); params = exact.
   - name: store_clickout
-    match: { event_name: click, params: { link_domain: store.example.com } }
+    match: { event_name: click, params_contains: { link_domain: myshop } }
   - name: patreon_clickout
-    match: { event_name: click, params: { link_domain: patreon.com } }
+    match: { event_name: click, params_contains: { link_domain: patreon.com } }
+  # Exact form, if you prefer:  match: { event_name: click, params: { link_domain: store.example.com } }
   # Or just reuse the key events you've already marked in GA4:
   - name: key_event
     match: { key_event: true }

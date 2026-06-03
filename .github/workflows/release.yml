@@ -1,0 +1,30 @@
+name: Release
+
+# Publishes to PyPI when a version tag (e.g. v0.1.0) is pushed.
+# Uses PyPI Trusted Publishing (OIDC) — NO API tokens or secrets are stored.
+# One-time setup on PyPI: Project → Settings → Publishing → add a trusted
+# publisher with owner=<your-gh-user>, repo=flowgauge, workflow=release.yml,
+# environment=pypi. See PUBLISHING.md.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: pypi          # must match the environment on the PyPI trusted publisher
+    permissions:
+      id-token: write          # required: lets the job mint the OIDC token PyPI trusts
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build sdist + wheel
+        run: uv build
+
+      - name: Publish to PyPI (trusted publishing)
+        run: uv publish

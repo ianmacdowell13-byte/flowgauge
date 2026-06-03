@@ -8,7 +8,7 @@ FlowGauge is an MCP server + companion skill that turns GA4 into answers to thre
 2. **Where is the UX leaking?** (landing pages, engagement, exits, and real session paths)
 3. **What should I fix next?** (a prioritized, plain-language read — not a spreadsheet)
 
-> ⚠️ **Pre-release scaffold (v0.1).** The structure, config, and tool surface are defined; live API wiring is marked with `TODO` in the source. See [`docs/SPEC.md`](docs/SPEC.md) for the full design.
+> **v0.1.** The GA4 Data API tools are implemented and working end-to-end. The optional BigQuery backend (`flow_paths` / `funnel`) is still on the roadmap. See [`docs/SPEC.md`](docs/SPEC.md) for the full design.
 
 ## Why another GA4 integration?
 
@@ -22,16 +22,39 @@ There are already many GA4 MCP servers — including [Google's official one](htt
 
 It generalizes to any site through a single config file — no site-specific logic lives in the code.
 
+## Install
+
+```bash
+uvx flowgauge          # run without installing (recommended)
+# or
+pip install flowgauge  # install into your environment
+```
+
+From source, for development:
+
+```bash
+git clone https://github.com/OWNER/flowgauge && cd flowgauge
+python -m venv .venv && .venv/bin/pip install -e ".[dev]"
+```
+
 ## Quickstart
 
-1. **Create a service account** in Google Cloud and download its JSON key.
-2. **Grant it read access:** in GA4 → Admin → *Property Access Management*, add the service-account email as **Viewer**.
-3. **Configure:**
+1. **Authenticate** as yourself (works today — see [Authentication](#authentication) for why, and the service-account option for CI):
+   ```bash
+   gcloud auth application-default login \
+     --scopes=openid,https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/cloud-platform
+   gcloud auth application-default set-quota-project <your-gcp-project-id>
+   ```
+2. **Configure:**
    ```bash
    cp config/flowgauge.config.example.yaml flowgauge.config.yaml
    # edit property_id, brand_domains, conversions...
-   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
    export FLOWGAUGE_CONFIG=./flowgauge.config.yaml
+   # Leave GOOGLE_APPLICATION_CREDENTIALS unset — FlowGauge uses the login above.
+   ```
+3. **Verify:**
+   ```bash
+   .venv/bin/python scripts/smoke-test.py
    ```
 4. **Run:**
    ```bash
@@ -45,13 +68,85 @@ It generalizes to any site through a single config file — no site-specific log
          "command": "uvx",
          "args": ["flowgauge"],
          "env": {
-           "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/key.json",
            "FLOWGAUGE_CONFIG": "/path/to/flowgauge.config.yaml"
          }
        }
      }
    }
    ```
+   (Using a pre-cutoff service account instead? Add `"GOOGLE_APPLICATION_CREDENTIALS": "/path/to/key.json"` to that `env` block.)
+
+## Authentication
+
+> **Heads-up (June 2026):** Google stopped registering service accounts created
+> after ~April 20, 2026 as Google Accounts, so GA4 (and Search Console) reject
+> them with *"this email doesn't match a Google Account."* Until Google restores
+> that, authenticate to GA4 as **yourself** (a user login). A service-account key
+> still works for the optional BigQuery backend, and for GA4 if you have a
+> service account created *before* the cutoff.
+> Ref: [Google Developer forums](https://discuss.google.dev/t/problem-with-new-service-accounts/362176).
+
+### Authenticate as yourself (recommended)
+
+If your Google account already has access to the GA4 property (Viewer or above),
+this needs **no "add user" step**:
+
+```bash
+gcloud auth application-default login \
+  --scopes=openid,https://www.googleapis.com/auth/analytics.readonly,https://www.googleapis.com/auth/cloud-platform
+gcloud auth application-default set-quota-project <your-gcp-project-id>
+```
+
+Leave `GOOGLE_APPLICATION_CREDENTIALS` **unset** — FlowGauge picks up this login
+automatically (`google.auth.default()`). Verify the whole chain:
+
+```bash
+.venv/bin/python scripts/smoke-test.py
+```
+
+## Service account setup
+
+> Use this path only for the **BigQuery backend**, or if you have a service
+> account created **before ~April 20, 2026** (see the heads-up above — newer ones
+> can't be added to GA4).
+
+FlowGauge can also authenticate to GA4 with a **service-account key** (not a
+personal Google login), so it runs the same way on your laptop, a teammate's
+machine, or CI — no per-person OAuth dance.
+
+**Automated (recommended).** From the repo root:
+
+```bash
+gcloud auth login                                   # one-time; opens browser. This is CLI auth — it does NOT touch your ADC file.
+scripts/setup-service-account.sh <your-gcp-project-id>
+```
+
+The script is idempotent and:
+
+1. enables `analyticsdata.googleapis.com` + `analyticsadmin.googleapis.com`,
+2. creates the `flowgauge-reader` service account,
+3. writes its JSON key to `~/.config/flowgauge/sa-key.json` (mode `600`, **outside the repo** so it can't be committed),
+4. prints the service-account email and the export lines.
+
+Don't have a project yet? `gcloud projects create <your-gcp-project-id>` first.
+
+**The one manual step** (GA4 access is not GCP IAM, so it can't be scripted): in
+**GA4 → Admin → Property Access Management**, add the printed service-account
+email as a **Viewer**.
+
+**Manual equivalent**, if you'd rather not run the script:
+
+```bash
+PROJECT=<your-gcp-project-id>
+gcloud services enable analyticsdata.googleapis.com analyticsadmin.googleapis.com --project "$PROJECT"
+gcloud iam service-accounts create flowgauge-reader --project "$PROJECT" --display-name "FlowGauge (read-only GA4)"
+gcloud iam service-accounts keys create ~/.config/flowgauge/sa-key.json \
+  --iam-account "flowgauge-reader@${PROJECT}.iam.gserviceaccount.com" --project "$PROJECT"
+```
+
+Then `export GOOGLE_APPLICATION_CREDENTIALS=~/.config/flowgauge/sa-key.json` and continue with the [Quickstart](#quickstart).
+
+> The service account needs **no GCP IAM roles** — its only permission is the GA4 Viewer grant you add in the GA4 admin UI. Least privilege by default.
 
 ## Tools
 

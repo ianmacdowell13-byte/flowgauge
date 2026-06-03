@@ -13,9 +13,15 @@ from pydantic import BaseModel, Field
 
 
 class ConversionMatch(BaseModel):
-    """Predicate that maps a GA4 event to a named, site-defined conversion."""
+    """Predicate that maps a GA4 event to a named, site-defined conversion.
+
+    ``params`` are exact-match event-parameter equalities; ``params_contains``
+    are substring matches (robust to subdomains / ``www.``, e.g. a Patreon link
+    that GA4 records as ``www.patreon.com``). Both are AND-ed together.
+    """
     event_name: str | None = None
     params: dict[str, str] = Field(default_factory=dict)
+    params_contains: dict[str, str] = Field(default_factory=dict)
     key_event: bool | None = None
 
 
