@@ -32,6 +32,16 @@ Produce a short, prioritized read on a site's traffic and UX flow using the
    - **What's leaking** — high-traffic / low-engagement landing pages; channels
      with traffic but no conversions; biggest path drop-offs.
    - **Fix next** — 3–5 concrete, prioritized actions tied to specific numbers.
+4. **Write a hand-off prompt.** End with a `## Hand-off prompt` section
+   containing a single fenced code block the user can copy straight into a
+   coding agent (Claude Code, Cursor, …) to act on the findings. FlowGauge is
+   read-only — this block is the bridge from insight to fix. It must:
+   - be **self-contained** — the coding agent has no GA4 context, so restate each
+     issue with its evidence (the page, event, or channel and the specific
+     numbers);
+   - cover the **highest-leverage 2–4 fixes** from "Fix next," as numbered tasks;
+   - stay implementation-agnostic (describe the problem + goal, not a guessed code
+     change) so it works on any stack.
 
 ## Rules
 

@@ -27,7 +27,7 @@ for that), or you don't have a GA4 property yet.
 Ask Claude *"run a traffic health check"* and FlowGauge returns a prioritized
 memo, not a spreadsheet:
 
-```text
+````text
 Traffic Health — last 29 days (no compare window; baselines are site-wide)
 
 Bottom line
@@ -51,7 +51,23 @@ Fix next
 1. Audit the clickout events — confirm they fire and are registered as GA4 key events.
 2. Rework /catalog — a 54% bounce on your main catalog is the biggest on-site leak.
 3. UTM-tag social links to recover the ~285 untagged sessions.
+
+Hand-off prompt  (copy into your coding agent)
 ```
+My GA4 traffic-health check found three issues on my site — please
+investigate and fix:
+
+1. Conversion tracking looks broken: the `store_clickout` event fired 0 times
+   and `patreon_clickout` 1 time over 29 days, despite the membership page
+   getting real traffic. Verify both events fire on the live buttons and are
+   registered as GA4 key events; fix the wiring if they aren't.
+2. The /catalog page leaks visitors — 54% bounce / 46% engagement vs. 83% on
+   the homepage. Audit it and tighten above-the-fold (clear thumbnails, CTAs).
+3. ~8.5% of sessions arrive untagged (~95% bounce) — social in-app browsers
+   stripping the referrer. Add UTM parameters to my social bio/link posts so
+   that traffic becomes attributable.
+```
+````
 
 *(Real output from a live site, lightly anonymized — paths genericized, numbers rounded.)*
 
