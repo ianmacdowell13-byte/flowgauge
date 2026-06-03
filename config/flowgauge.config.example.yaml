@@ -1,0 +1,35 @@
+# FlowGauge — example configuration
+# Copy to flowgauge.config.yaml and edit. This file is the ONLY place site-specific
+# logic lives; the code stays generic.
+
+property_id: "123456789"            # your GA4 numeric property ID
+timezone: America/New_York
+brand_domains: [example.com]        # used to classify internal vs. outbound
+
+# What counts as "success" for THIS site. Reports speak in these terms.
+# Generic creator profile: traffic -> outbound click to a store and/or Patreon.
+conversions:
+  - name: store_clickout
+    match: { event_name: click, params: { link_domain: store.example.com } }
+  - name: patreon_clickout
+    match: { event_name: click, params: { link_domain: patreon.com } }
+  # Or just reuse the key events you've already marked in GA4:
+  - name: key_event
+    match: { key_event: true }
+
+# Optional: override GA4's default channel grouping for sources it misclassifies.
+channels:
+  Social-Short-Form:
+    source_contains: [tiktok, "t.co", instagram, youtube]
+
+report_defaults:
+  lookback_days: 28
+  compare: previous_period          # previous_period | previous_year | none
+  cardinality_cap: 50               # max rows per breakdown (protects LLM context)
+  currency: USD
+
+# Optional — enables flow_paths / funnel tools. Requires the GA4 -> BigQuery export.
+bigquery:
+  enabled: false
+  project: "my-gcp-project"
+  dataset: "analytics_123456789"

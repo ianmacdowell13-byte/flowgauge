@@ -1,0 +1,27 @@
+# Secrets — never commit
+*.json.key
+service-account*.json
+*.pem
+.env
+.env.*
+flowgauge.config.yaml          # local config may contain property IDs / paths; commit only the .example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
