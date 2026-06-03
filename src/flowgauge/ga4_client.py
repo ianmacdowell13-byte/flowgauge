@@ -1,8 +1,13 @@
 """Thin wrapper over the GA4 Data API (properties.runReport).
 
-Auth uses Application Default Credentials — set GOOGLE_APPLICATION_CREDENTIALS
-to the service-account key path. The service account needs Viewer on the
-GA4 property. Scope: https://www.googleapis.com/auth/analytics.readonly
+Auth uses Application Default Credentials via ``google.auth.default()``:
+
+- **Primary:** a user login — ``gcloud auth application-default login`` with the
+  ``analytics.readonly`` scope (leave ``GOOGLE_APPLICATION_CREDENTIALS`` unset).
+- **Alternative:** a pre-2026 service-account key — set
+  ``GOOGLE_APPLICATION_CREDENTIALS`` to its path.
+
+Either way the only permission required is GA4 **Viewer**. See README → Authentication.
 """
 from __future__ import annotations
 

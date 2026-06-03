@@ -4,32 +4,25 @@ FlowGauge publishes to [PyPI](https://pypi.org/) automatically via GitHub Action
 **Trusted Publishing** (OIDC) — there are **no API tokens or secrets** stored
 anywhere. You push a version tag; the `Release` workflow builds and uploads.
 
-Replace `OWNER` below with your GitHub username throughout.
+The repo already lives at
+[github.com/ianmacdowell13-byte/flowgauge](https://github.com/ianmacdowell13-byte/flowgauge);
+the steps below are the **one-time PyPI wiring** plus the per-release flow.
 
 ## One-time setup
 
-**1. Create the GitHub repo and push** (under your account):
-
-```bash
-git init && git add -A && git commit -m "FlowGauge v0.1.0"
-git branch -M main
-git remote add origin https://github.com/OWNER/flowgauge.git
-git push -u origin main
-```
-
-**2. Add a Trusted Publisher on PyPI** (reserves the name for *only* this repo):
+**1. Add a Trusted Publisher on PyPI** (reserves the name for *only* this repo):
 
 - Create a PyPI account at https://pypi.org and enable 2FA.
 - Go to **Your account → Publishing → Add a new pending publisher** and enter:
   - **PyPI Project Name:** `flowgauge`
-  - **Owner:** `OWNER`
+  - **Owner:** `ianmacdowell13-byte`
   - **Repository name:** `flowgauge`
   - **Workflow name:** `release.yml`
   - **Environment name:** `pypi`
 - A "pending" publisher reserves the name and authorizes this repo's workflow to
   create the project on first publish — no manual upload, no token.
 
-**3. Create the matching GitHub environment:**
+**2. Create the matching GitHub environment:**
 
 - Repo → **Settings → Environments → New environment** → name it `pypi`
   (matches `environment: pypi` in `.github/workflows/release.yml`).
