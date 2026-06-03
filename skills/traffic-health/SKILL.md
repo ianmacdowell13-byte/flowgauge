@@ -15,16 +15,20 @@ Produce a short, prioritized read on a site's traffic and UX flow using the
 
 ## Routine
 
-1. **Frame the window.** Default to the config `lookback_days` vs. the compare
-   period. State the dates.
+1. **Frame the window.** Default to the config `lookback_days`. State the dates.
+   Period-over-period compare is **not implemented yet** (it's reserved in
+   config) — so judge "good/bad" against **within-window and site-wide
+   baselines**, not a prior period. Do **not** report a "no compare period set"
+   line or recommend setting one; that's a known gap, not a config the user can
+   fix today.
 2. **Pull the battery** (in order):
-   - `traffic_overview` — trend + vs. compare.
+   - `traffic_overview` — sessions/users/engagement across the window.
    - `acquisition` (breakdown=`channel`, then `source_medium` if a channel is vague) — what's driving visits.
    - `landing_pages` — entry points and their engagement/bounce.
    - `conversions` — config-defined success events, by channel.
    - If BigQuery is enabled: `flow_paths` and/or `funnel` for true drop-off.
 3. **Synthesize** into three sections, each 2–5 bullets:
-   - **What's working** — channels/pages up vs. compare; best converters.
+   - **What's working** — best channels/pages by engagement and key events; best converters.
    - **What's leaking** — high-traffic / low-engagement landing pages; channels
      with traffic but no conversions; biggest path drop-offs.
    - **Fix next** — 3–5 concrete, prioritized actions tied to specific numbers.

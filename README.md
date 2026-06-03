@@ -28,23 +28,32 @@ Ask Claude *"run a traffic health check"* and FlowGauge returns a prioritized
 memo, not a spreadsheet:
 
 ```text
-Traffic Health — last 28 days (vs. previous 28)
+Traffic Health — last 29 days (no compare window; baselines are site-wide)
+
+Bottom line
+Traffic is healthy and social-led — ~50% Organic Social, ~80% engagement. The
+problem isn't getting people in; it's that conversion tracking looks broken and
+the catalog page leaks half its visitors.
 
 What's working
-• Sessions up 18% (12.4k → 14.6k); Organic Search drove the gain (+31%).
-• /guides/getting-started converts to a store click-out at 6.1% vs. 2.3% site-wide.
+• Organic Social is the engine: ~2,000 sessions (~50% of traffic), 80% engagement.
+• Homepage holds attention: 83% engagement, 17% bounce — best entry point on the site.
+• Organic Search is efficient: 290 key events from just 674 sessions.
 
 What's leaking
-• Paid Social: 2.1k sessions but 0.4% conversion — engagement 22% vs. 41% site-wide.
-• /pricing: 3.0k sessions, 68% bounce — high intent, weak page.
+• store_clickout = 0 and patreon_clickout = 1 in 29 days — that's a broken/
+  uninstrumented event, not real demand. Highest-value fix.
+• /catalog: ~370 sessions at 46% engagement / 54% bounce, vs. 83% on the homepage.
+• ~285 untagged sessions (8.5%) at ~95% bounce — social in-app browsers stripping
+  the referrer.
 
 Fix next
-1. Fix /pricing — a 68% bounce on a high-intent page is your biggest single loss.
-2. Cut or retarget Paid Social; it underperforms organic ~5×.
-3. Copy /guides/getting-started's structure onto your other guide pages.
+1. Audit the clickout events — confirm they fire and are registered as GA4 key events.
+2. Rework /catalog — a 54% bounce on your main catalog is the biggest on-site leak.
+3. UTM-tag social links to recover the ~285 untagged sessions.
 ```
 
-*(Illustrative output. Your numbers, your config-defined conversions.)*
+*(Real output from a live site, lightly anonymized — paths genericized, numbers rounded.)*
 
 ## Why another GA4 integration?
 
@@ -252,7 +261,7 @@ The **`traffic-health`** skill (in [`skills/`](skills/traffic-health/SKILL.md)) 
 
 - **v0.1** — scaffold + Data API tools ✓
 - **v0.2** — `traffic-health` skill + Claude Code plugin packaging ✓ *(current)*
-- **v0.3** — BigQuery backend (`flow_paths`, `funnel`)
+- **v0.3** — period-over-period compare (wire up `report_defaults.compare`) + BigQuery backend (`flow_paths`, `funnel`)
 - **v0.4** — optional Google Search Console join on `landingPage`
 
 See [`docs/SPEC.md`](docs/SPEC.md).
