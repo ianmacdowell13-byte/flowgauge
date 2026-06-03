@@ -9,10 +9,23 @@ Thanks for helping build opinionated GA4 analytics. A few notes:
 
 ## Dev setup
 ```bash
-pip install -e ".[dev,bigquery]"
-ruff check . && pytest
+python -m venv .venv && .venv/bin/pip install -e ".[dev,bigquery]"
+.venv/bin/ruff check . && .venv/bin/pytest -q
 ```
-Tests use recorded fixtures — **no live GA4 calls in CI.**
+
+**No live GA4 calls anywhere in the suite.** Tests inject a fake report client or a
+duck-typed GA4 response — shared helpers live in [`tests/helpers.py`](tests/helpers.py)
+(imported as `from helpers import ...`). Layout:
+
+| File | Covers |
+|---|---|
+| `test_config.py` | config loading, env resolution, property-name normalization |
+| `test_schemas.py` | output models + `model_dump` shape |
+| `test_ga4_client_report.py` | `run_report` parsing, sampling, request wiring |
+| `test_reports.py` | report builders: dims/metrics, windows, caps, summaries |
+| `test_smoke.py` | channel-override merge math + per-conversion breakdown |
+| `test_server.py` | MCP tool registration + delegation |
+| `test_bigquery.py` | disabled-by-default guard + v0.3 stubs |
 
 ## Good first issues
 - New **report recipes** in `reports.py` (e.g. device split, new-vs-returning).

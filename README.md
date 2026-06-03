@@ -24,18 +24,53 @@ It generalizes to any site through a single config file — no site-specific log
 
 ## Install
 
+FlowGauge ships two ways. Both run the same MCP server and skill — pick the one
+that matches your client.
+
+### Option A — Claude Code plugin (one command)
+
+```text
+/plugin marketplace add ianmacdowell13-byte/flowgauge
+/plugin install flowgauge@flowgauge
+```
+
+This connects the FlowGauge MCP server **and** loads the `traffic-health` skill.
+It runs the server via `uvx flowgauge`, so you need [`uv`](https://docs.astral.sh/uv/)
+on your PATH. You still complete the one-time GA4 setup below
+([Authentication](#authentication) + a `flowgauge.config.yaml`) — the plugin
+makes *connecting the tool* one step, not *configuring analytics access*.
+
+### Option B — any MCP client (Claude Desktop, Cursor, …)
+
 ```bash
 uvx flowgauge          # run without installing (recommended)
 # or
 pip install flowgauge  # install into your environment
 ```
 
-From source, for development:
+Then add it to your client's MCP config (see [Quickstart](#quickstart) step 5).
+
+### From source (development)
 
 ```bash
-git clone https://github.com/OWNER/flowgauge && cd flowgauge
+git clone https://github.com/ianmacdowell13-byte/flowgauge && cd flowgauge
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 ```
+
+## Billing & data access
+
+FlowGauge is **just code** — there is no hosted FlowGauge service, and nothing
+routes through the author's accounts:
+
+- **You bring your own GA4 property and Google credentials.** Every API call runs
+  under *your* auth against *your* property (see [Authentication](#authentication)).
+- **The GA4 Data API is free.** Google rate-limits it with per-property quotas but
+  does not bill per request. Installing FlowGauge costs you nothing in API fees.
+- **No keys are embedded.** The package ships only placeholder config; your real
+  config and credentials stay on your machine and are git-ignored.
+- **The only thing that can cost money** is the optional BigQuery backend
+  (`flow_paths` / `funnel`), which runs on *your* GCP billing, is opt-in, and ships
+  **disabled by default**.
 
 ## Quickstart
 
@@ -150,20 +185,29 @@ Then `export GOOGLE_APPLICATION_CREDENTIALS=~/.config/flowgauge/sa-key.json` and
 
 ## Tools
 
+**Available now** (GA4 Data API — implemented and tested):
+
 | Tool | Purpose |
 |---|---|
-| `describe_property` | Property name, timezone, currency, configured key events |
-| `list_fields` | Schema discovery (valid dimensions/metrics, incl. custom) |
-| `traffic_overview` | Sessions/users/engagement over time vs. a compare period |
+| `traffic_overview` | Sessions / users / new users / engagement over time |
 | `acquisition` | Breakdown by channel group / source-medium / campaign |
-| `landing_pages` | Landing page × sessions × engagement × bounce × conversions |
-| `page_engagement` | Page × views × avg engagement time × exits |
-| `conversions` | Your config-defined conversions, by channel and landing page |
-| `run_report` | Power-user escape hatch (arbitrary report, with safety caps) |
-| `flow_paths` *(BigQuery)* | Most common ordered page/event sequences |
-| `funnel` *(BigQuery)* | Step-by-step conversion + drop-off |
+| `landing_pages` | Landing page × sessions × engagement × bounce × key events |
+| `page_engagement` | Page × views × engagement time × event count |
+| `conversions` | Your config-defined conversions, broken down by channel |
 
-The **`traffic-health`** skill (in [`skills/`](skills/traffic-health/SKILL.md)) chains these into a narrative report.
+Each tool takes optional `start` / `end` dates (GA4 relative forms like
+`28daysAgo`, or `YYYY-MM-DD`) and returns a typed `ReportResult` — a one-line
+`summary`, the `rows`, a `date_range`, a `sampled` flag, and any `notes`. Full
+reference: [`docs/TOOLS.md`](docs/TOOLS.md).
+
+**Planned** (designed in [`docs/SPEC.md`](docs/SPEC.md), not yet implemented):
+
+| Tool | Ships in | Purpose |
+|---|---|---|
+| `flow_paths` *(BigQuery)* | v0.3 | Most common ordered page/event sequences |
+| `funnel` *(BigQuery)* | v0.3 | Step-by-step conversion + drop-off |
+
+The **`traffic-health`** skill (in [`skills/`](skills/traffic-health/SKILL.md)) chains the available tools into a narrative report.
 
 ## Status & roadmap
 

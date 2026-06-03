@@ -1,0 +1,20 @@
+{
+  "name": "flowgauge",
+  "owner": {
+    "name": "ianmacdowell13-byte",
+    "url": "https://github.com/ianmacdowell13-byte"
+  },
+  "metadata": {
+    "description": "FlowGauge — opinionated GA4 analytics as a Claude Code plugin.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "flowgauge",
+      "source": "./",
+      "description": "Opinionated GA4 analytics MCP server + traffic-health skill. Bring your own GA4 property and auth; the GA4 Data API is free.",
+      "version": "0.1.0",
+      "keywords": ["mcp", "google-analytics", "ga4", "analytics", "skill"]
+    }
+  ]
+}
