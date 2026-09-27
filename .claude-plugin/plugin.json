@@ -13,7 +13,7 @@
   "mcpServers": {
     "flowgauge": {
       "command": "uvx",
-      "args": ["flowgauge"],
+      "args": ["--from", "git+https://github.com/ianmacdowell13-byte/flowgauge", "flowgauge"],
       "env": {
         "FLOWGAUGE_CONFIG": "${FLOWGAUGE_CONFIG}"
       }

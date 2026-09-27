@@ -8,7 +8,7 @@ FlowGauge is an MCP server + companion skill that turns GA4 into answers to thre
 2. **Where is the UX leaking?** (landing pages, engagement, exits, and real session paths)
 3. **What should I fix next?** (a prioritized, plain-language read — not a spreadsheet)
 
-> **v0.1.** The GA4 Data API tools are implemented and working end-to-end. The optional BigQuery backend (`flow_paths` / `funnel`) is still on the roadmap. See [`docs/SPEC.md`](docs/SPEC.md) for the full design.
+> **v0.1.0.** The GA4 Data API tools are implemented and working end-to-end. The optional BigQuery backend (`flow_paths` / `funnel`) is still on the roadmap. See [`docs/SPEC.md`](docs/SPEC.md) for the full design.
 
 ## Who it's for
 
@@ -96,7 +96,7 @@ that matches your client.
 ```
 
 This connects the FlowGauge MCP server **and** loads the `traffic-health` skill.
-It runs the server via `uvx flowgauge`, so you need [`uv`](https://docs.astral.sh/uv/)
+It runs the server straight from this GitHub repo with `uvx`, so you need [`uv`](https://docs.astral.sh/uv/)
 on your PATH. You still complete the one-time GA4 setup below
 ([Authentication](#authentication) + a `flowgauge.config.yaml`) — the plugin
 makes *connecting the tool* one step, not *configuring analytics access*.
@@ -104,9 +104,9 @@ makes *connecting the tool* one step, not *configuring analytics access*.
 ### Option B — any MCP client (Claude Desktop, Cursor, …)
 
 ```bash
-uvx flowgauge          # run without installing (recommended)
+uvx --from git+https://github.com/ianmacdowell13-byte/flowgauge flowgauge   # run without installing (recommended)
 # or
-pip install flowgauge  # install into your environment
+pip install git+https://github.com/ianmacdowell13-byte/flowgauge            # install into your environment
 ```
 
 Then add it to your client's MCP config (see [Quickstart](#quickstart) step 5).
@@ -139,7 +139,7 @@ python -m venv .venv && .venv/bin/pip install -e ".[dev]"
    ```
 4. **Run:**
    ```bash
-   uvx flowgauge            # or: pip install -e . && flowgauge
+   uvx --from git+https://github.com/ianmacdowell13-byte/flowgauge flowgauge   # or: pip install -e . && flowgauge
    ```
 5. **Point your MCP client at it.** Example (Claude Desktop / Cowork `mcpServers` block):
    ```json
@@ -147,7 +147,7 @@ python -m venv .venv && .venv/bin/pip install -e ".[dev]"
      "mcpServers": {
        "flowgauge": {
          "command": "uvx",
-         "args": ["flowgauge"],
+         "args": ["--from", "git+https://github.com/ianmacdowell13-byte/flowgauge", "flowgauge"],
          "env": {
            "FLOWGAUGE_CONFIG": "/path/to/flowgauge.config.yaml"
          }
@@ -275,8 +275,10 @@ The **`traffic-health`** skill (in [`skills/`](skills/traffic-health/SKILL.md)) 
 
 ## Status & roadmap
 
+The current release is **0.1.0**. It ships the first two milestones below.
+
 - **v0.1** — scaffold + Data API tools ✓
-- **v0.2** — `traffic-health` skill + Claude Code plugin packaging ✓ *(current)*
+- **v0.2** — `traffic-health` skill + Claude Code plugin packaging ✓
 - **v0.3** — period-over-period compare (wire up `report_defaults.compare`) + BigQuery backend (`flow_paths`, `funnel`)
 - **v0.4** — optional Google Search Console join on `landingPage`
 

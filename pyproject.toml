@@ -13,7 +13,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Site Management",
 ]
 dependencies = [
-    "mcp>=1.2.0",
+    "mcp>=1.2.0,<2",
     "google-analytics-data>=0.18.0",
     "google-analytics-admin>=0.22.0",
     "pydantic>=2.6",

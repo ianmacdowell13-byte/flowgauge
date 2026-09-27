@@ -5,6 +5,12 @@ All notable changes to FlowGauge are documented here. The format loosely follows
 
 ## [Unreleased]
 
+### Fixed
+- Pin `mcp<2`. The 2.x SDK renamed `FastMCP`, so fresh installs crashed on startup.
+- Install instructions and the Claude Code plugin now run FlowGauge from GitHub
+  (`uvx --from git+https://...`). The package is not on PyPI yet.
+- README status now names the actual release (0.1.0).
+
 ## [0.1.0] — 2026-06-03
 
 ### Added
